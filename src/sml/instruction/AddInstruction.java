@@ -2,36 +2,29 @@ package sml.instruction;
 
 import sml.Instruction;
 import sml.Machine;
-import sml.RegisterName;
-
-// TODO: write a JavaDoc for the class
-
-/**
- * @author
- */
+import sml.Registers.Register;
 
 public class AddInstruction extends Instruction {
-	private final RegisterName result;
-	private final RegisterName source;
+    private final Register register1;
+    private final Register register2;
 
-	public static final String OP_CODE = "add";
+    public AddInstruction(String label, Register register1, Register register2) {
+        super(label, "add");
+        this.register1 = register1;
+        this.register2 = register2;
+    }
 
-	public AddInstruction(String label, RegisterName result, RegisterName source) {
-		super(label, OP_CODE);
-		this.result = result;
-		this.source = source;
-	}
+    @Override
+    public int execute(Machine machine) {
+        int value1 = machine.getRegisters().getRegister(register1.getNumber());
+        int value2 = machine.getRegisters().getRegister(register2.getNumber());
+        int result = value1 + value2;
+        machine.getRegisters().setRegister(register1.getNumber(), result);
+        return Instruction.NORMAL_PROGRAM_COUNTER_UPDATE;
+    }
 
-	@Override
-	public int execute(Machine m) {
-		int value1 = m.getRegisters().get(result);
-		int value2 = m.getRegisters().get(source);
-		m.getRegisters().set(result, value1 + value2);
-		return NORMAL_PROGRAM_COUNTER_UPDATE;
-	}
-
-	@Override
-	public String toString() {
-		return getLabelString() + getOpcode() + " " + result + " " + source;
-	}
+    @Override
+    public String toString() {
+        return super.getLabelString() + getOpcode() + " " + register1 + " " + register2;
+    }
 }
