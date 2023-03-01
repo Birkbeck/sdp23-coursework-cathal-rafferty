@@ -11,33 +11,28 @@ import java.util.Scanner;
 import static sml.Registers.Register;
 
 /**
- * This class ....
- * <p>
  * The translator of a <b>S</b><b>M</b>al<b>L</b> program.
- *
- * @author ...
  */
 public final class Translator {
 
     private final String fileName; // source file of SML code
-
-    // line contains the characters in the current line that's not been processed yet
-    private String line = "";
+    private String line = ""; // line contains the characters in the current line that's not been processed yet
 
     public Translator(String fileName) {
-        this.fileName =  fileName;
+        this.fileName = fileName;
     }
 
-    // translate the small program in the file into lab (the labels) and
-    // prog (the program)
-    // return "no errors were detected"
-
+    /**
+     * Reads and translates the small program in the file into {@code labels} (the labels) and {@code program} (the program)
+     * @param labels The labels of the SML program
+     * @param program The list of instructions in the SML program
+     * @throws IOException If there is an error reading the file
+     */
     public void readAndTranslate(Labels labels, List<Instruction> program) throws IOException {
         try (var sc = new Scanner(new File(fileName), StandardCharsets.UTF_8)) {
             labels.reset();
             program.clear();
 
-            // Each iteration processes line and reads the next input line into "line"
             while (sc.hasNextLine()) {
                 line = sc.nextLine();
                 String label = getLabel();
@@ -53,13 +48,9 @@ public final class Translator {
     }
 
     /**
-     * Translates the current line into an instruction with the given label
-     *
-     * @param label the instruction label
-     * @return the new instruction
-     * <p>
-     * The input line should consist of a single SML instruction,
-     * with its label already removed.
+     * Returns the next instruction from the current line
+     * @param label The label of the instruction
+     * @return The next instruction in the program
      */
     private Instruction getInstruction(String label) {
         if (line.isEmpty())
@@ -70,15 +61,52 @@ public final class Translator {
             case AddInstruction.OP_CODE -> {
                 String r = scan();
                 String s = scan();
-                return new AddInstruction(label, Register.valueOf(r), Register.valueOf(s));
+                String t = scan();
+                return new AddInstruction(label, Register.valueOf(r), Register.valueOf(s), Register.valueOf(t));
             }
+            case SubInstruction.OP_CODE -> {
+                String r = scan();
+                String s = scan();
+                String t = scan();
+                return new SubInstruction(label, Register.valueOf(r), Register.valueOf(s), Register.valueOf(t));
+            }
+            case MulInstruction.OP_CODE -> {
+                String r = scan();
+                String s = scan();
+                String t = scan();
+                return new MulInstruction(label, Register.valueOf(r), Register.valueOf(s), Register.valueOf(t));
+            }
+            case DivInstruction.OP_CODE -> {
+                String r = scan();
+                String s = scan();
+                String t = scan();
+                return new DivInstruction(label, Register.valueOf(r), Register.valueOf(s), Register.valueOf(t));
+            }
+            case OutInstruction.OP_CODE -> {
+                String r = scan();
+                return new OutInstruction(label, Register.valueOf(r));
+            }
+            case LinInstruction.OP_CODE -> {
+                String r = scan();
+                int value = scanInt();
+                return new LinInstruction(label, Register.valueOf(r), value);
+            }
+            case BnzInstruction.OP_CODE -> {
+                String r = scan();
+                String l = scan();
+                return new BnzInstruction(label, Register.valueOf(r), l);
+            }
+            case MovInstruction.OP_CODE -> {
+                String r = scan();
+                String s = scan();
+                return new MovInstruction(label, Register.valueOf(r), Register.valueOf(s));
+            }
+            case JnzInstruction.OP_CODE -> {
+                String r = scan();
+                String s = scan();
+                return new JnzInstruction(label, Register.valueOf(r), label2);
 
-            // TODO: add code for all other types of instructions
-
-            // TODO: Then, replace the switch by using the Reflection API
-
-            // TODO: Next, use dependency injection to allow this machine class
-            //       to work with different sets of opcodes (different CPUs)
+            }
 
             default -> {
                 System.out.println("Unknown instruction: " + opcode);
@@ -89,29 +117,4 @@ public final class Translator {
 
 
     private String getLabel() {
-        String word = scan();
-        if (word.endsWith(":"))
-            return word.substring(0, word.length() - 1);
-
-        // undo scanning the word
-        line = word + " " + line;
-        return null;
-    }
-
-    /*
-     * Return the first word of line and remove it from line.
-     * If there is no word, return "".
-     */
-    private String scan() {
-        line = line.trim();
-
-        for (int i = 0; i < line.length(); i++)
-            if (Character.isWhitespace(line.charAt(i))) {
-                String word = line.substring(0, i);
-                line = line.substring(i);
-                return word;
-            }
-
-        return line;
-    }
-}
+        String word = scan
