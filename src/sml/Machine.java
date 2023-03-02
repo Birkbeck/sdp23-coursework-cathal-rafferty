@@ -5,28 +5,26 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static sml.Instruction.NORMAL_PROGRAM_COUNTER_UPDATE;
-
 /**
  * Represents the machine, the context in which programs run.
  * <p>
  * An instance contains 32 registers and methods to access and change them.
- *
  */
 public final class Machine {
 
-	private final Labels labels = new Labels();
-
-	private final List<Instruction> program = new ArrayList<>();
-
+	private final Labels labels;
+	private final List<Instruction> program;
 	private final Registers registers;
+	private final static Machine instance = new Machine(Registers.getInstance());
 
-	// The program counter; it contains the index (in program)
-	// of the next instruction to be executed.
-	private int programCounter = 0;
-
-	public Machine(Registers registers) {
+	private Machine(Registers registers) {
+		this.labels = new Labels();
+		this.program = new ArrayList<>();
 		this.registers = registers;
+	}
+
+	public static Machine getInstance() {
+		return instance;
 	}
 
 	/**
@@ -34,12 +32,12 @@ public final class Machine {
 	 * Precondition: the program and its labels have been stored properly.
 	 */
 	public void execute() {
-		programCounter = 0;
+		int programCounter = 0;
 		registers.clear();
 		while (programCounter < program.size()) {
 			Instruction ins = program.get(programCounter);
 			int programCounterUpdate = ins.execute(this);
-			programCounter = (programCounterUpdate == NORMAL_PROGRAM_COUNTER_UPDATE)
+			programCounter = (programCounterUpdate == Instruction.NORMAL_PROGRAM_COUNTER_UPDATE)
 				? programCounter + 1
 				: programCounterUpdate;
 		}
@@ -57,6 +55,14 @@ public final class Machine {
 		return this.registers;
 	}
 
+	/**
+	 * Adds an instruction to the program.
+	 *
+	 * @param instruction the instruction to add
+	 */
+	public void addInstruction(Instruction instruction) {
+		program.add(instruction);
+	}
 
 	/**
 	 * String representation of the program under execution.
@@ -70,23 +76,19 @@ public final class Machine {
 				.collect(Collectors.joining("\n"));
 	}
 
-	// TODO: use pattern matching for instanceof
-	// https://docs.oracle.com/en/java/javase/14/language/pattern-matching-instanceof-operator.html
 	@Override
 	public boolean equals(Object o) {
 		if (o instanceof Machine) {
-			// TODO:
 			Machine other = (Machine) o;
 			return Objects.equals(this.labels, other.labels)
 					&& Objects.equals(this.program, other.program)
-					&& Objects.equals(this.registers, other.registers)
-					&& this.programCounter == other.programCounter;
+					&& Objects.equals(this.registers, other.registers);
 		}
 		return false;
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(labels, program, registers, programCounter);
+		return Objects.hash(labels, program, registers);
 	}
 }
