@@ -4,58 +4,80 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-// TODO: write a JavaDoc for the class
-
 /**
- *
- * @author ...
+ * A singleton class that stores labels and their corresponding addresses.
+ * Uses dependency injection, the singleton design pattern, and a factory class.
  */
 public final class Labels {
-	private final Map<String, Integer> labels = new HashMap<>();
+    private static Labels instance;
+    private final Map<String, Integer> labels;
 
-	/**
-	 * Adds a label with the associated address to the map.
-	 *
-	 * @param label the label
-	 * @param address the address the label refers to
-	 */
-	public void addLabel(String label, int address) {
-		Objects.requireNonNull(label);
-		// TODO: Add a check that there are no label duplicates.
-		labels.put(label, address);
-	}
+    /**
+     * Private constructor to prevent external instantiation.
+     */
+    private Labels() {
+        labels = new HashMap<>();
+    }
 
-	/**
-	 * Returns the address associated with the label.
-	 *
-	 * @param label the label
-	 * @return the address the label refers to
-	 */
-	public int getAddress(String label) {
-		// TODO: Where can NullPointerException be thrown here?
-		//       (Write an explanation.)
-		//       Add code to deal with non-existent labels.
-		return labels.get(label);
-	}
+    /**
+     * Factory method to get the singleton instance of Labels.
+     *
+     * @return the singleton instance of Labels
+     */
+    public static Labels getInstance() {
+        if (instance == null) {
+            instance = new Labels();
+        }
+        return instance;
+    }
 
-	/**
-	 * representation of this instance,
-	 * in the form "[label -> address, label -> address, ..., label -> address]"
-	 *
-	 * @return the string representation of the labels map
-	 */
-	@Override
-	public String toString() {
-		// TODO: Implement the method using the Stream API (see also class Registers).
-		return "";
-	}
+    /**
+     * Adds a label with the associated address to the map.
+     *
+     * @param label the label
+     * @param address the address the label refers to
+     * @throws IllegalArgumentException if the label already exists in the map
+     */
+    public void addLabel(String label, int address) {
+        Objects.requireNonNull(label);
+        if (labels.containsKey(label)) {
+            throw new IllegalArgumentException("Label already exists: " + label);
+        }
+        labels.put(label, address);
+    }
 
-	// TODO: Implement equals and hashCode (needed in class Machine).
+    /**
+     * Returns the address associated with the label.
+     *
+     * @param label the label
+     * @return the address the label refers to
+     * @throws IllegalArgumentException if the label does not exist in the map
+     */
+    public int getAddress(String label) {
+        Objects.requireNonNull(label);
+        Integer address = labels.get(label);
+        if (address == null) {
+            throw new IllegalArgumentException("Label does not exist: " + label);
+        }
+        return address;
+    }
 
-	/**
-	 * Removes the labels
-	 */
-	public void reset() {
-		labels.clear();
-	}
+    /**
+     * Returns a string representation of the labels map.
+     *
+     * @return the string representation of the labels map
+     */
+    @Override
+    public String toString() {
+        return labels.entrySet().stream()
+                .map(e -> e.getKey() + " -> " + e.getValue())
+                .reduce("[", (a, b) -> a + b + ", ") + "]";
+    }
+
+    /**
+     * Resets the labels map to its initial state (empty).
+     */
+    public void reset() {
+        labels.clear();
+    }
 }
