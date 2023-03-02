@@ -4,6 +4,7 @@ import sml.instruction.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Scanner;
@@ -24,7 +25,8 @@ public final class Translator {
 
     /**
      * Reads and translates the small program in the file into {@code labels} (the labels) and {@code program} (the program)
-     * @param labels The labels of the SML program
+     *
+     * @param labels  The labels of the SML program
      * @param program The list of instructions in the SML program
      * @throws IOException If there is an error reading the file
      */
@@ -49,6 +51,7 @@ public final class Translator {
 
     /**
      * Returns the next instruction from the current line
+     *
      * @param label The label of the instruction
      * @return The next instruction in the program
      */
@@ -57,64 +60,48 @@ public final class Translator {
             return null;
 
         String opcode = scan();
-        switch (opcode) {
-            case AddInstruction.OP_CODE -> {
-                String r = scan();
-                String s = scan();
-                String t = scan();
-                return new AddInstruction(label, Register.valueOf(r), Register.valueOf(s), Register.valueOf(t));
-            }
-            case SubInstruction.OP_CODE -> {
-                String r = scan();
-                String s = scan();
-                String t = scan();
-                return new SubInstruction(label, Register.valueOf(r), Register.valueOf(s), Register.valueOf(t));
-            }
-            case MulInstruction.OP_CODE -> {
-                String r = scan();
-                String s = scan();
-                String t = scan();
-                return new MulInstruction(label, Register.valueOf(r), Register.valueOf(s), Register.valueOf(t));
-            }
-            case DivInstruction.OP_CODE -> {
-                String r = scan();
-                String s = scan();
-                String t = scan();
-                return new DivInstruction(label, Register.valueOf(r), Register.valueOf(s), Register.valueOf(t));
-            }
-            case OutInstruction.OP_CODE -> {
-                String r = scan();
-                return new OutInstruction(label, Register.valueOf(r));
-            }
-            case LinInstruction.OP_CODE -> {
-                String r = scan();
-                int value = scanInt();
-                return new LinInstruction(label, Register.valueOf(r), value);
-            }
-            case BnzInstruction.OP_CODE -> {
-                String r = scan();
-                String l = scan();
-                return new BnzInstruction(label, Register.valueOf(r), l);
-            }
-            case MovInstruction.OP_CODE -> {
-                String r = scan();
-                String s = scan();
-                return new MovInstruction(label, Register.valueOf(r), Register.valueOf(s));
-            }
-            case JnzInstruction.OP_CODE -> {
-                String r = scan();
-                String s = scan();
-                return new JnzInstruction(label, Register.valueOf(r), label2);
 
+        // use reflection to create an instance of the instruction class
+        try {
+            Class<?> instructionClass = Class.forName("sml.instruction." + opcode + "Instruction");
+            Constructor<?> constructor = instructionClass.getConstructor(String.class, Register.class, Register.class, Object.class);
+            switch (constructor.getParameterCount()) {
+                case 2:
+                    return (Instruction) constructor.newInstance(label, Register.valueOf(scan()));
+                case 3:
+                    return (Instruction) constructor.newInstance(label, Register.valueOf(scan()), parseArgument(instructionClass.getConstructor(int.class), scan()));
+                case 4:
+                    return (Instruction) constructor.newInstance(label, Register.valueOf(scan()), Register.valueOf(scan()), parseArgument(instructionClass.getConstructor(int.class), scan()));
+                default:
+                    System.out.println("Unknown instruction: " + opcode);
+                    return null;
             }
-
-            default -> {
-                System.out.println("Unknown instruction: " + opcode);
-            }
+        } catch (Exception e) {
+            System.out.println("Unknown instruction: " + opcode);
+            return null;
         }
-        return null;
     }
 
+    /**
+     * Parses the argument for an instruction that takes an int argument
+     *
+     * @param constructor The constructor for the instruction
+     * @param arg         The argument to be parsed
+     * @return The parsed argument
+     */
+    private int parseArgument(Constructor<?> constructor, String arg) {
+        try {
+            return (int) constructor.newInstance(Integer.parseInt(arg)).newInstance();
+        } catch (Exception e) {
+            return 0;
+        }
+    }
 
-    private String getLabel() {
-        String word = scan
+    /**
+     * Returns the next word in the current line
+     *
+     * @return The next word in the line
+     */
+    private String scan() {
+        line = line.trim();
+        int whiteSpaceIndex = line.indexOf
