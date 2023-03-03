@@ -1,0 +1,23 @@
+package sml.instruction;
+
+import sml.Registers;
+
+public class OutInstruction extends Instruction {
+    private int register;
+
+    public OutInstruction(String label, int register) {
+        super(label, "out");
+        this.register = register;
+    }
+
+    @Override
+    public void execute(Registers registers) {
+        int value = registers.getRegister(register);
+        System.out.println("Value of register " + register + " is " + value);
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + " register " + register;
+    }
+}
